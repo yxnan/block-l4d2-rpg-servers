@@ -19,7 +19,7 @@ while True:
     else:
         try:
             # format: <ip[:port]> <name>
-            raddr, memo = user_input.split()
+            raddr, memo = user_input.split(maxsplit=1)
             if raddr.find(':') != -1:
                 raddr = raddr.split(':')[0]
             ip_dict[raddr] = memo
