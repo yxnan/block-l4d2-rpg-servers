@@ -37,6 +37,7 @@ rpg_name_pattern=$(echo '
     | tr -d '[:space:]'
 )
 
+# Generate rpglist.json
 curl -sS --get \
     'http://api.steampowered.com/IGameServersService/GetServerList/v1' \
     --header 'Accept: application/json' \
@@ -58,3 +59,61 @@ curl -sS --get \
         | unique_by(.raddr)
     }' \
 > rpglist.json
+
+# Generate for win: BlockRpg.ps1
+iplist_ps1=$(cat rpglist.json | jq --raw-output '
+    .data
+    | map(.raddr)
+    | join("\", \"")
+')
+
+echo '
+$rulename = "Block L4D2 RPG Servers"
+$iplist = @("'"$iplist_ps1"'")
+
+if ( Get-NetFirewallRule -DisplayName $rulename 2>$null ) {
+    echo "Updating existing rule: ""$rulename"""
+    Set-NetFirewallRule `
+        -DisplayName $rulename `
+        -RemoteAddress $iplist
+} else {
+    echo "Creating new rule: ""$rulename"""
+    New-NetFirewallRule `
+        -DisplayName $rulename `
+        -Direction Outbound `
+        -Protocol "udp" `
+        -Action Block `
+        -RemoteAddress $iplist
+}
+
+echo "Done."
+' \
+> BlockRpg.ps1
+
+# Generate for unix: block-rpg.sh
+iplistname=l4d2-rpg-blacklist
+iplist_bash=$(cat rpglist.json | jq --raw-output '
+    .data
+    | map(["add '"$iplistname"'", .raddr])[]
+    | join(" ")
+')
+
+echo '#!/bin/bash
+iplistname='"$iplistname"'
+tmpfile=$(mktemp -t ipset-XXXX)
+
+cat << EOF > $tmpfile
+create $iplistname hash:ip family inet hashsize 4096 maxelem 65536
+flush $iplistname
+'"$iplist_bash"'
+EOF
+
+ipset restore -! < $tmpfile
+rm -rf $tmpfile
+
+if [ $(iptables -L | grep -c $iplistname) -eq 0 ]; then
+    iptables -I OUTPUT -p UDP -m set --match-set $iplistname dst -j DROP
+fi
+' \
+> block-rpg.sh
+

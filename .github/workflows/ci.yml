@@ -21,13 +21,16 @@ jobs:
       env:
         API_KEY: ${{ secrets.api_key }}
       run: ./build-rpglist.sh "$API_KEY"
-        
+
     - name: Set date env
       run: echo "TODAY=$(date '+%Y/%m/%d')" >> $GITHUB_ENV
-        
+
     - name: Update Release
       uses: softprops/action-gh-release@v1
       with:
-        files: rpglist.json
         tag_name: latest
         name: ${{ env.TODAY }}
+        files: |
+          rpglist.json
+          BlockRpg.ps1
+          block-rpg.sh
