@@ -68,6 +68,11 @@ iplist_ps1=$(cat rpglist.json | jq --raw-output '
 ')
 
 echo '
+if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    exit
+}
+
 $rulename = "Block L4D2 RPG Servers"
 $iplist = @("'"$iplist_ps1"'")
 
@@ -86,7 +91,7 @@ if ( Get-NetFirewallRule -DisplayName $rulename 2>$null ) {
         -RemoteAddress $iplist
 }
 
-echo "Done."
+Read-Host -Prompt "------------- Done. -------------" | Out-Null
 ' \
 > BlockRpg.ps1
 

@@ -12,7 +12,7 @@
 
 下列两种方法任选其一：
 
-1. Release获取`BlockRpg.ps1`，使用管理员权限执行即可
+1. Release获取`BlockRpg.ps1`，右键使用Powershell执行，如果有提示需要确认，输入R然后回车即可
 2. Release获取`rpglist.json`，导入火绒或者其他类似能提供IP过滤名单的软件即可
 
 ### Linux
