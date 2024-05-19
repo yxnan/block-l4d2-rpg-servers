@@ -18,7 +18,7 @@ rpg_name_pattern=$(echo '
     | 天下
     | 神域
     | 完美世界
-    | 一念仙行录
+    | 一念仙行
     | 窥仙之路
     | 风花雪月
     | 暗黑之魂
@@ -33,17 +33,26 @@ rpg_name_pattern=$(echo '
     | 通天塔
     | 无法逃脱
     | 穷途末路
+    | 众神传说
+    | 上帝
+    | HTの
     ' \
     | tr -d '[:space:]'
 )
 
-# Generate rpglist.json
+mkdir -p output && cd output
+
+# Get full list
 curl -sS --get \
     'http://api.steampowered.com/IGameServersService/GetServerList/v1' \
     --header 'Accept: application/json' \
     --data-urlencode "key=$api_key" \
     --data-urlencode "filter=\appid\550\nor\9\gametype\official\white\1\region\0\region\1\region\2\region\3\region\5\region\6\region\7" \
     --data-urlencode "limit=100000" \
+> serverlist_full.json
+
+# Generate rpglist.json
+cat serverlist_full.json \
 | jq '
     {
         "ver": "5.1",

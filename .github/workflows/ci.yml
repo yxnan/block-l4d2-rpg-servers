@@ -31,6 +31,7 @@ jobs:
         tag_name: latest
         name: ${{ env.TODAY }}
         files: |
-          rpglist.json
-          BlockRpg.ps1
-          block-rpg.sh
+          output/rpglist.json
+          output/BlockRpg.ps1
+          output/block-rpg.sh
+          output/serverlist_full.json
