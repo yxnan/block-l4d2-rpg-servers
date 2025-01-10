@@ -34,7 +34,7 @@ function _log() {
         printf "$LOG_FORMATER" 35 "详细" "$content"
         ;;
     i | I)
-        printf "$LOG_FORMATER" 37 "信息" "$content"
+        printf "$LOG_FORMATER" 32 "信息" "$content"
         ;;
     w | W)
         printf "$LOG_FORMATER" 33 "警告" "$content" >&2
@@ -65,13 +65,27 @@ function pause() {
     read -p "按下 Enter 以继续..."
 }
 
+# 删除一条黑洞路由
+function delete_blackhole() {
+    ip route delete blackhole "$1" && info "已删除: $1"
+}
+
+# 添加一条黑洞路由
+function add_blackhole() {
+    ip route add blackhole "$1" && info "已添加: $1"
+}
+
+function show_blackhole() {
+    ip route show type blackhole
+}
+
 # 清理黑洞路由
 # 参数：
 #   $1 - 清理模式（all 或 select）
 function clean_up_route() {
     if [[ "$1" == "all" ]]; then
         for addr in "${BLACKHOLE_LIST[@]}"; do
-            ip route delete blackhole "$addr"
+            delete_blackhole "$addr"
         done
         return 0
     fi
@@ -96,7 +110,7 @@ function clean_up_route_use_native() {
         while :; do
             read -r -p "是否要删除条目 ${addr} [Y/n]" input
             case "$input" in
-            y | Y | '') ip route delete blackhole "$addr" ;;
+            y | Y | '') delete_blackhole "$addr" ;;
             n | N) ;;
             *) continue ;;
             esac
@@ -127,7 +141,7 @@ function clean_up_route_use_fzf() {
         fi
 
         unset list["$addr"]
-        ip route delete blackhole "$addr"
+        delete_blackhole "$addr"
     done
 }
 
@@ -144,7 +158,7 @@ if [[ -z "$1" ]]; then
 fi
 
 # 检查文件是否存在
-if [[ -f "$1" ]]; then
+if [[ ! -f "$1" ]]; then
     error "$1 不是一个文件"
     exit 1
 fi
@@ -165,7 +179,7 @@ fi
 declare -a BLACKHOLE_LIST
 while read -r addr; do
     BLACKHOLE_LIST+=("$addr")
-done <<<"$(ip route show type blackhole | cut -d ' ' -f 2)"
+done <<<"$(show_blackhole | cut -d ' ' -f 2 | sort -n)"
 
 # 如果存在黑洞路由，询问用户是否清理
 if [[ "${#BLACKHOLE_LIST}" -gt 0 ]]; then
@@ -200,6 +214,6 @@ if [[ -z "$(which jq)" ]]; then
     grep -e "raddr" "$1" | sed -e 's/^ *"raddr": "//;s/",$//'
 else
     jq -r '.data[].raddr' "$1"
-fi | while read -r addr; do
-    ip route add blackhole "$addr"
+fi | sort -n | while read -r addr; do
+    add_blackhole "$addr"
 done
