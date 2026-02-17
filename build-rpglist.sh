@@ -37,6 +37,7 @@ rpg_name_pattern=$(echo '
     | 众神传说
     | 上帝
     | HTの
+    | 仙行录
     ' \
     | tr -d '[:space:]'
 )
